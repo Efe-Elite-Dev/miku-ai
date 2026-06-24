@@ -1,0 +1,35 @@
+name: M.I.K.U. Core // Autonomous CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  agent-kalite-kontrol:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 1. Kodu GitHub Sanal Makinesine Çek
+      uses: actions/checkout@v4
+
+    - name: 2. Python 3.11 Ortamını Kur
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        cache: 'pip'
+
+    - name: 3. Bağımlılıkları ve Linter'ı Yükle
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: 4. Ruff ile Kod Kalitesi ve Hata Denetimi (Elite-Dev Standardı)
+      run: |
+        ruff check .
+        ruff format --check .
+
+    - name: 5. "Kuru Sıkı" (Dry-Run) Derleme Testi
+      run: |
+        python -m py_compile agent.py
