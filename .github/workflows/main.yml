@@ -1,44 +1,35 @@
-name: M.I.K.U. Core // Autonomous EXE Factory
+name: M.I.K.U. Core // Cyberpunk GUI Forge
 
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: # BÜYÜK NİMET: GitHub sayfasından "Tıkla ve .EXE üret" butonu ekler!
+  workflow_dispatch:
 
 jobs:
-  forge-windows-executable:
+  build-gui-agent:
     runs-on: windows-latest
 
     steps:
-    - name: 1. Kodu Fabrika Makinesine Çek
-      uses: actions/checkout@v4
-
-    - name: 2. Python 3.11 Kurulumu
-      uses: actions/setup-python@v5
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: "3.11"
         cache: 'pip'
 
-    - name: 3. Gerekli Kütüphaneleri ve Derleyiciyi Yükle
+    - name: Bağımlılıkları Kur
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pyinstaller ruff
+        pip install pyinstaller
 
-    - name: 4. Ruff Linter Slap Engelleme (Otomatik Formatla)
+    - name: PyInstaller ile Noconsole GUI Döv
       run: |
-        # Kodu kontrol edip kırma; makine belleğindeyken direkt kendi istediğin gibi düzelt:
-        ruff format .
+        # --noconsole                : Siyah CMD kutusunu tamamen yok eder, sadece modern arayüz açılır.
+        # --collect-all customtkinter: Arayüzün modern temalarını ve yuvarlak buton grafiklerini paketler.
+        pyinstaller --onefile --noconsole --clean --collect-all customtkinter --hidden-import pyttsx3.drivers.sapi5 --name "MIKU_OS_v1" agent.py
 
-    - name: 5. PyInstaller ile Tek Parça .EXE Döv
-      run: |
-        # --onefile : Her şeyi tek bir .exe içine sıkıştır
-        # --clean   : Derleme çöplerini temizle
-        pyinstaller --onefile --clean --name "MIKU_Core_v01" agent.py
-
-    - name: 6. Oluşan .EXE'yi Ganimet Olarak GitHub'a Yükle
-      uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v4
       with:
-        name: MIKU-Windows-Ajan-v01
-        path: dist/MIKU_Core_v01.exe
-        compression-level: 0 # 0 = Bekletmeden saniyeler içinde upload et
+        name: MIKU-Cyber-Ajan-v1
+        path: dist/MIKU_OS_v1.exe
+        compression-level: 0
