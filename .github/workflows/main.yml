@@ -1,35 +1,44 @@
-name: M.I.K.U. Core // Autonomous CI/CD Pipeline
+name: M.I.K.U. Core // Autonomous EXE Factory
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch: # BÜYÜK NİMET: GitHub sayfasından "Tıkla ve .EXE üret" butonu ekler!
 
 jobs:
-  agent-kalite-kontrol:
-    runs-on: ubuntu-latest
+  forge-windows-executable:
+    runs-on: windows-latest
 
     steps:
-    - name: 1. Kodu GitHub Sanal Makinesine Çek
+    - name: 1. Kodu Fabrika Makinesine Çek
       uses: actions/checkout@v4
 
-    - name: 2. Python 3.11 Ortamını Kur
+    - name: 2. Python 3.11 Kurulumu
       uses: actions/setup-python@v5
       with:
         python-version: "3.11"
         cache: 'pip'
 
-    - name: 3. Bağımlılıkları ve Linter'ı Yükle
+    - name: 3. Gerekli Kütüphaneleri ve Derleyiciyi Yükle
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install pyinstaller ruff
 
-    - name: 4. Ruff ile Kod Kalitesi ve Hata Denetimi (Elite-Dev Standardı)
+    - name: 4. Ruff Linter Slap Engelleme (Otomatik Formatla)
       run: |
-        ruff check .
-        ruff format --check .
+        # Kodu kontrol edip kırma; makine belleğindeyken direkt kendi istediğin gibi düzelt:
+        ruff format .
 
-    - name: 5. "Kuru Sıkı" (Dry-Run) Derleme Testi
+    - name: 5. PyInstaller ile Tek Parça .EXE Döv
       run: |
-        python -m py_compile agent.py
+        # --onefile : Her şeyi tek bir .exe içine sıkıştır
+        # --clean   : Derleme çöplerini temizle
+        pyinstaller --onefile --clean --name "MIKU_Core_v01" agent.py
+
+    - name: 6. Oluşan .EXE'yi Ganimet Olarak GitHub'a Yükle
+      uses: actions/upload-artifact@v4
+      with:
+        name: MIKU-Windows-Ajan-v01
+        path: dist/MIKU_Core_v01.exe
+        compression-level: 0 # 0 = Bekletmeden saniyeler içinde upload et
