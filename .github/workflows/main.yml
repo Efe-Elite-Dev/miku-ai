@@ -1,58 +1,37 @@
-# =====================================================================
-# EFE ELITE-DEV // 4-AŞAMALI OTONOM BORU HATTI (PAINT-PIPELINE)
-# =====================================================================
+name: M.I.K.U. Core // Live Deep-Scan Forge
 
-def alt_ajan_sorgula(prompt_metni, sicaklik=0.3):
-    """Boru hattındaki her bir 'yuvarlak' için arkada tek kullanımlık LLM füzeleri ateşler"""
-    url = "https://text.pollinations.ai/openai/v1/chat/completions"
-    payload = {
-        "model": "gpt-4o-mini",
-        "messages": [{"role": "user", "content": prompt_metni}],
-        "temperature": sicaklik # Sıcaklık düşük = Ciddiyet ve nesnellik yüksek
-    }
-    req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            return json.loads(resp.read().decode('utf-8'))['choices'][0]['message']['content']
-    except:
-        return "Boru hattı tıkandı."
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
 
-def miku_deep_research_pipeline(gui_nesnesi, sorgu_konusu):
-    gui_nesnesi.status_bar.configure(text="⚡ [BORU HATTI]: 1/4 - WEB TARAMASI YAPILIYOR...")
-    gui_nesnesi.log_bas(f"\n[🚀 DEEP-SCAN PROTOKOLÜ BAŞLADI]: '{sorgu_konusu}'\n" + "-"*50 + "\n")
+jobs:
+  build-live-agent:
+    runs-on: windows-latest
 
-    # -----------------------------------------------------------------
-    # 1. YUVARLAK: [WEB]
-    # -----------------------------------------------------------------
-    gui_nesnesi.log_bas("  [>] Node 1 (Web Scraper) : İnternet dehlizleri taranıyor...\n")
-    p1 = f"Sen bir Web Tarayıcı ajansın. Şu konuyu internetten araştır, bulduğun saf, ham, özetlenmemiş en taze bilgiyi dök:\n\n{sorgu_konusu}"
-    ham_veri = alt_ajan_sorgula(p1, sicaklik=0.5)
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        cache: 'pip'
 
-    # -----------------------------------------------------------------
-    # 2. YUVARLAK: [DOĞRULUK KONTROLÜ]
-    # -----------------------------------------------------------------
-    gui_nesnesi.status_bar.configure(text="⚡ [BORU HATTI]: 2/4 - BİLGİLER TEYİT EDİLİYOR...")
-    gui_nesnesi.log_bas("  [>] Node 2 (Fact-Checker): Yalanlar ve halüsinasyonlar filtreleniyor...\n")
-    p2 = f"Sen acımasız bir Doğruluk Denetçisisin. Şu internet verisini oku; içinde kanıtsız iddia, mantık hatası veya uydurma varsa sil. Sadece %100 nesnel ve doğrulanmış kısımları bırak:\n\n{ham_veri}"
-    dogru_veri = alt_ajan_sorgula(p2, sicaklik=0.2)
+    - name: 1. Bağımlılıkları ve Derleyiciyi Yükle
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
 
-    # -----------------------------------------------------------------
-    # 3. YUVARLAK: [ÇEVİRMEN]
-    # -----------------------------------------------------------------
-    gui_nesnesi.status_bar.configure(text="⚡ [BORU HATTI]: 3/4 - DİL SENKRONİZASYONU...")
-    gui_nesnesi.log_bas("  [>] Node 3 (Linguist)    : Türkçe dil yapısına kalibre ediliyor...\n")
-    p3 = f"Sen bir çeviri ve editoryal ajansın. Şu metni, pürüzsüz, siber-mekanik ve üst düzey bir Türkçe ile yeniden yaz:\n\n{dogru_veri}"
-    turkce_veri = alt_ajan_sorgula(p3, sicaklik=0.3)
+    - name: 2. PyInstaller ile Zırhlı Live-Scraper .EXE Döv
+      run: |
+        # --collect-all customtkinter     : Modern arayüz temaları için
+        # --collect-all duckduckgo_search : Canlı arama motorunun gizli SSL kalkanlarını .exe'ye gömmek için!
+        pyinstaller --onefile --noconsole --clean --collect-all customtkinter --collect-all duckduckgo_search --hidden-import pyttsx3.drivers.sapi5 --name "MIKU_DeepScan_v1.2" agent.py
 
-    # -----------------------------------------------------------------
-    # 4. YUVARLAK: [KISA VE ÖZ]
-    # -----------------------------------------------------------------
-    gui_nesnesi.status_bar.configure(text="⚡ [BORU HATTI]: 4/4 - VERİ SIKIŞTIRILIYOR...")
-    gui_nesnesi.log_bas("  [>] Node 4 (Distiller)   : 'Kısa & Öz' algoritması devrede...\n")
-    p4 = f"Sen bir veri sıkıştırma ustasısın. Şu Türkçe metni laf kalabalığından tamamen arındır; Efe'nin saniyeler içinde anlayacağı, maddeleme veya 2 vurucu cümle içeren 'TL;DR' (Özet) formatına getir:\n\n{turkce_veri}"
-    final_rapor = alt_ajan_sorgula(p4, sicaklik=0.4)
-
-    # --- GANİMETİ EKRANA BAS ---
-    gui_nesnesi.log_bas("\n" + "="*50 + f"\n[★ KESİN RAPOR]: {sorgu_konusu}\n" + "="*50 + f"\n{final_rapor}\n\n")
-    gui_nesnesi.status_bar.configure(text="🟢 M.I.K.U. DEVREDE // SIFIR KURULUM BULUT MODU")
-    gui_nesnesi.ses_bas(final_rapor)
+    - name: 3. Üretilen Siber Ajanı GitHub'a Yükle
+      uses: actions/upload-artifact@v4
+      with:
+        name: MIKU-Live-Ajan-v1.2
+        path: dist/MIKU_DeepScan_v1.2.exe
+        compression-level: 0
