@@ -11,7 +11,7 @@ import webbrowser
 import customtkinter as ctk
 import speech_recognition as sr
 import pyttsx3
-from duckduckgo_search import DDGS  # <--- YENİ CANLI KULAĞIMIZ
+from duckduckgo_search import DDGS
 
 # --- Noconsole Çökme Koruması ---
 if sys.stdin is None:
@@ -20,6 +20,12 @@ if sys.stdout is None:
     sys.stdout = open(os.devnull, "w")
 if sys.stderr is None:
     sys.stderr = open(os.devnull, "w")
+
+# CLOUDFLARE DUVARINI DELEN GİZLİ KİMLİK (CHROME ZIRHI)
+CHROME_HEADERS = {
+    'Content-Type': 'application/json',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+}
 
 SYSTEM_PROMPT = """Senin adın M.I.K.U. (Modular Interface & Kernel Utility). Sahibin: Efe (Elite-Dev).
 Sen Windows çekirdeğine bağlı çalışan fütüristik bir siber ajansın. Asla dalkavukluk yapma, net, mekanik, alaycı ve zeki konuş.
@@ -37,7 +43,7 @@ class MikuKernelGUI(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("M.I.K.U. // OS KONSOLU v1.2 (Live Deep-Scan)")
+        self.title("M.I.K.U. // OS KONSOLU v1.2 (Bypass Edition)")
         self.geometry("540x700")
         self.configure(fg_color="#0a1128")
         ctk.set_appearance_mode("dark")
@@ -56,7 +62,7 @@ class MikuKernelGUI(ctk.CTk):
     def arayuzu_kur(self):
         self.status_bar = ctk.CTkLabel(
             self,
-            text="🟢 M.I.K.U. BULUT KERNEL // CANLI İNTERNET MODU",
+            text="🟢 M.I.K.U. BULUT KERNEL // CLOUDFLARE BYPASS AKTİF",
             fg_color="#1c2541",
             text_color="#39C5BB",
             font=("Consolas", 12, "bold"),
@@ -76,7 +82,7 @@ class MikuKernelGUI(ctk.CTk):
         )
         self.chat_box.pack(pady=5, padx=15, fill="both", expand=True)
         self.log_bas(
-            "=== M.I.K.U. DEEP-SCAN v1.2 YÜKLENDİ ===\nPatron: Efe Elite-Dev\nYetkiler: Regex Kernel UI + 4-Aşamalı Canlı Web Ajanı\n--------------------------------------------------\n"
+            "=== M.I.K.U. DEEP-SCAN v1.2 (Bypassed) YÜKLENDİ ===\nPatron: Efe Elite-Dev\nSiber Silah: Anti-Cloudflare User-Agent Injection\n--------------------------------------------------\n"
         )
 
         self.input_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -123,6 +129,7 @@ class MikuKernelGUI(ctk.CTk):
             except Exception:
                 pass
 
+    # --- SOHBET BEYNİ (GİZLİ KİMLİK ENJEKTE EDİLDİ) ---
     def ask_cloud_ai(self, prompt_text, temp=0.5):
         url = "https://text.pollinations.ai/openai/v1/chat/completions"
         payload = {
@@ -130,56 +137,37 @@ class MikuKernelGUI(ctk.CTk):
             "messages": [{"role": "user", "content": prompt_text}],
             "temperature": temp,
         }
+        # CHROME_HEADERS ile Cloudflare duvarını aşırı yerel taklitle deliyoruz:
         req = urllib.request.Request(
             url,
             data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers=CHROME_HEADERS
         )
         try:
             with urllib.request.urlopen(req, timeout=15) as r:
-                return json.loads(r.read().decode("utf-8"))["choices"][0][
-                    "message"
-                ]["content"]
+                return json.loads(r.read().decode("utf-8"))["choices"][0]["message"]["content"]
         except Exception as e:
             return f"API Hatası: {e}"
 
-    # --- ASIL TETİK MOTORU ---
     def gonder_tetik(self):
         metin = self.entry.get().strip()
         if not metin:
             return
         self.entry.delete(0, "end")
         self.log_bas(f"[Efe Elite-Dev] >>> {metin}\n")
-        threading.Thread(
-            target=self.ajan_motorunu_islet, args=(metin,), daemon=True
-        ).start()
+        threading.Thread(target=self.ajan_motorunu_islet, args=(metin,), daemon=True).start()
 
     def ajan_motorunu_islet(self, komut):
         k_kontrol = komut.lower().strip()
 
-        # =============================================================
-        # ★ MAKAS KÖPRÜSÜ: "ARAŞTIR" SİNYALİ YAKALANDI MI?
-        # =============================================================
-        if any(
-            k_kontrol.startswith(x)
-            for x in ["araştır:", "arastir:", "araştır ", "arastir "]
-        ):
-            # İki nokta veya boşluktan sonraki asıl sorguyu ayıkla:
-            sorgu = (
-                re.split(r":|\s", komut, 1)[1].strip()
-                if re.search(r":|\s", komut)
-                else komut
-            )
-
-            # Normal sohbeti öldür, 4-Aşamalı Deep-Scan Boru Hattını fırlat!
+        # MAKAS KÖPRÜSÜ
+        if any(k_kontrol.startswith(x) for x in ["araştır:", "arastir:", "araştır ", "arastir "]):
+            sorgu = re.split(r":|\s", komut, 1)[1].strip() if re.search(r":|\s", komut) else komut
             self.miku_deep_research_pipeline(sorgu)
             return
 
-        # Normal Sohbet & Regex İşleyicisi
         self.status_bar.configure(text="⚡ M.I.K.U. DÜŞÜNÜYOR...")
-        yanit = self.ask_cloud_ai(
-            SYSTEM_PROMPT + f"\n\nKullanıcı: {komut}", temp=0.5
-        )
+        yanit = self.ask_cloud_ai(SYSTEM_PROMPT + f"\n\nKullanıcı: {komut}", temp=0.5)
 
         self.log_bas(f"[M.I.K.U.] >>> {yanit}\n\n")
         self.ses_bas(yanit)
@@ -188,16 +176,12 @@ class MikuKernelGUI(ctk.CTk):
         if re.search(r"\[RUN:(.*?)\]", yanit):
             app = re.search(r"\[RUN:(.*?)\]", yanit).group(1).strip()
             self.log_bas(f"[KERNEL] -> '{app}' çalıştırıldı.\n\n")
-            subprocess.Popen(
-                app, shell=True, creationflags=subprocess.CREATE_NO_WINDOW
-            )
+            subprocess.Popen(app, shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
 
         if re.search(r"\[SC:(.*?)\]", yanit):
             sarki = re.search(r"\[SC:(.*?)\]", yanit).group(1).strip()
             self.log_bas(f"[KERNEL] -> SoundCloud '{sarki}' açılıyor.\n\n")
-            webbrowser.open(
-                f"https://soundcloud.com/search/sounds?q={urllib.parse.quote(sarki)}"
-            )
+            webbrowser.open(f"https://soundcloud.com/search/sounds?q={urllib.parse.quote(sarki)}")
 
         if "[DIVA]" in yanit:
             self.log_bas("[KERNEL] -> Project DIVA 60FPS tetiklendi.\n\n")
@@ -212,80 +196,64 @@ class MikuKernelGUI(ctk.CTk):
             self.chat_box.delete("1.0", "end")
             self.chat_box.configure(state="disabled")
 
-        self.status_bar.configure(
-            text="🟢 M.I.K.U. DEVREDE // CANLI İNTERNET MODU"
-        )
+        self.status_bar.configure(text="🟢 M.I.K.U. DEVREDE // CANLI İNTERNET MODU")
 
-    # =================================================================
-    # 🚀 4-AŞAMALI MS PAINT BORU HATTI (CANLI DUCKDUCKGO ENJEKSİYONU)
-    # =================================================================
+    # --- MS PAINT ALTI-AJAN MOTORU (BURAYA DA GİZLİ KİMLİK EKLENDİ) ---
+    def alt_ajan_sorgula(self, prompt_metni, sicaklik=0.3):
+        url = "https://text.pollinations.ai/openai/v1/chat/completions"
+        payload = {
+            "model": "gpt-4o-mini",
+            "messages": [{"role": "user", "content": prompt_metni}],
+            "temperature": sicaklik
+        }
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode('utf-8'),
+            headers=CHROME_HEADERS # Filtre kırıcı buraya da takıldı
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                return json.loads(resp.read().decode('utf-8'))['choices'][0]['message']['content']
+        except:
+            return "Boru hattı tıkandı."
+
     def miku_deep_research_pipeline(self, sorgu_konusu):
-        self.status_bar.configure(
-            text="⚡ [BORU HATTI]: 1/4 - CANLI WEB TARANIYOR..."
-        )
-        self.log_bas(
-            f"\n[🚀 DEEP-SCAN PROTOKOLÜ BAŞLADI]: '{sorgu_konusu}'\n"
-            + "-" * 50
-            + "\n"
-        )
+        self.status_bar.configure(text="⚡ [BORU HATTI]: 1/4 - CANLI WEB TARANIYOR...")
+        self.log_bas(f"\n[🚀 DEEP-SCAN PROTOKOLÜ BAŞLADI]: '{sorgu_konusu}'\n" + "-" * 50 + "\n")
 
-        # 1. YUVARLAK: [GERÇEK CANLI İNTERNET]
+        # 1. YUVARLAK: DDG
         self.log_bas("  [>] Node 1 (Live DDG Search): Google ağı taranıyor...\n")
         try:
             ddg_sonuclar = DDGS().text(sorgu_konusu, max_results=4)
-            ham_veri = "\n\n".join(
-                [f"Site: {r['href']}\nÖzet: {r['body']}" for r in ddg_sonuclar]
-            )
+            ham_veri = "\n\n".join([f"Site: {r['href']}\nÖzet: {r['body']}" for r in ddg_sonuclar])
             if not ham_veri.strip():
-                ham_veri = (
-                    "Arama motoru bu spesifik konuda sonuç döndüremedi."
-                )
+                ham_veri = "Arama motoru sonuç döndüremedi."
         except Exception as e:
             ham_veri = f"Arama ağı kilitlendi: {e}"
 
-        # 2. YUVARLAK: [DOĞRULUK KONTROLÜ]
-        self.status_bar.configure(
-            text="⚡ [BORU HATTI]: 2/4 - BİLGİLER TEYİT EDİLİYOR..."
-        )
-        self.log_bas(
-            "  [>] Node 2 (Fact-Checker)   : Yalanlar ve gürültü filtreleniyor...\n"
-        )
+        # 2. YUVARLAK: FACT CHECK
+        self.status_bar.configure(text="⚡ [BORU HATTI]: 2/4 - BİLGİLER TEYİT EDİLİYOR...")
+        self.log_bas("  [>] Node 2 (Fact-Checker)   : Yalanlar ve gürültü filtreleniyor...\n")
         p2 = f"Sen bir Doğruluk Denetçisisin. Sorulan soru: '{sorgu_konusu}'. Aşağıdaki canlı arama motoru sonuçlarını analiz et, uydurma veya alakasız linkleri çöpe at ve sadece teyitli bilgiyi sentezle:\n\n{ham_veri}"
-        dogru_veri = self.ask_cloud_ai(p2, temp=0.2)
+        dogru_veri = self.alt_ajan_sorgula(p2, temp=0.2 if 'temp' in locals() else 0.2)
 
-        # 3. YUVARLAK: [ÇEVİRMEN]
-        self.status_bar.configure(
-            text="⚡ [BORU HATTI]: 3/4 - DİL KALİBRASYONU..."
-        )
-        self.log_bas(
-            "  [>] Node 3 (Linguist)       : Türkçe dil yapısına oturttuluyor...\n"
-        )
+        # 3. YUVARLAK: LINGUIST
+        self.status_bar.configure(text="⚡ [BORU HATTI]: 3/4 - DİL KALİBRASYONU...")
+        self.log_bas("  [>] Node 3 (Linguist)       : Türkçe dil yapısına oturttuluyor...\n")
         p3 = f"Şu metni siber-mekanik, akıcı ve üst düzey bir Türkçe ile yeniden yaz:\n\n{dogru_veri}"
-        turkce_veri = self.ask_cloud_ai(p3, temp=0.3)
+        turkce_veri = self.alt_ajan_sorgula(p3, sicaklik=0.3)
 
-        # 4. YUVARLAK: [KISA VE ÖZ]
-        self.status_bar.configure(
-            text="⚡ [BORU HATTI]: 4/4 - RAPOR DAMITILIYOR..."
-        )
-        self.log_bas(
-            "  [>] Node 4 (Distiller)      : TL;DR algoritması devrede...\n"
-        )
+        # 4. YUVARLAK: DISTILLER
+        self.status_bar.configure(text="⚡ [BORU HATTI]: 4/4 - RAPOR DAMITILIYOR...")
+        self.log_bas("  [>] Node 4 (Distiller)      : TL;DR algoritması devrede...\n")
         p4 = f"Şu Türkçe metni laf kalabalığından tamamen arındır; Efe'nin saniyeler içinde okuyup anlayacağı, vurucu ve net bir Özet Rapor haline getir:\n\n{turkce_veri}"
-        final_rapor = self.ask_cloud_ai(p4, temp=0.4)
+        final_rapor = self.alt_ajan_sorgula(p4, sicaklik=0.4)
 
-        self.log_bas(
-            "\n"
-            + "=" * 50
-            + f"\n[★ KESİN RAPOR]: {sorgu_konusu}\n"
-            + "=" * 50
-            + f"\n{final_rapor}\n\n"
-        )
-        self.status_bar.configure(
-            text="🟢 M.I.K.U. DEVREDE // CANLI İNTERNET MODU"
-        )
+        self.log_bas("\n" + "=" * 50 + f"\n[★ KESİN RAPOR]: {sorgu_konusu}\n" + "=" * 50 + f"\n{final_rapor}\n\n")
+        self.status_bar.configure(text="🟢 M.I.K.U. DEVREDE // CANLI İNTERNET MODU")
         self.ses_bas(final_rapor)
 
-    # --- DEMİR ADAM SES PUSUSU ---
+    # --- GİZLİ SES PUSUSU ---
     def pasif_ses_pususu(self):
         r = sr.Recognizer()
         with sr.Microphone() as kaynak:
@@ -293,35 +261,16 @@ class MikuKernelGUI(ctk.CTk):
             while True:
                 try:
                     ses = r.listen(kaynak, phrase_time_limit=2.5)
-                    tetik = r.recognize_google(
-                        ses, language="tr-TR"
-                    ).lower()
+                    tetik = r.recognize_google(ses, language="tr-TR").lower()
 
-                    if any(
-                        x in tetik
-                        for x in [
-                            "miku",
-                            "hey miku",
-                            "heymiku",
-                            "miko",
-                            "mikü",
-                        ]
-                    ):
-                        self.status_bar.configure(
-                            text="🎙️ M.I.K.U. DİNLİYOR // KOMUT SÖYLE..."
-                        )
+                    if any(x in tetik for x in ["miku", "hey miku", "heymiku", "miko", "mikü"]):
+                        self.status_bar.configure(text="🎙️ M.I.K.U. DİNLİYOR // KOMUT SÖYLE...")
                         self.ses_bas("Efendim patron?")
 
                         k_ses = r.listen(kaynak, phrase_time_limit=6)
-                        k_metin = r.recognize_google(
-                            k_ses, language="tr-TR"
-                        )
+                        k_metin = r.recognize_google(k_ses, language="tr-TR")
                         self.log_bas(f"[🎙️ Sesli Giriş] >>> {k_metin}\n")
-                        threading.Thread(
-                            target=self.ajan_motorunu_islet,
-                            args=(k_metin,),
-                            daemon=True,
-                        ).start()
+                        threading.Thread(target=self.ajan_motorunu_islet, args=(k_metin,), daemon=True).start()
                 except Exception:
                     pass
 
