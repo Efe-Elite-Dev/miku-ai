@@ -1,37 +1,51 @@
-name: M.I.K.U. Core // Live Deep-Scan Forge
+name: M.I.K.U. Core // Apex Sovereign Release Forge
 
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
 
+# ★ ÇOK KRİTİK DEVOPS SİGORTASI: GitHub sunucusuna "Release açma yetkisi" veriyoruz!
+permissions:
+  contents: write
+
 jobs:
-  build-live-agent:
+  build-and-publish:
     runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - uses: actions/setup-python@v5
       with:
         python-version: "3.11"
         cache: 'pip'
 
-    - name: 1. Bağımlılıkları ve Derleyiciyi Yükle
+    - name: 1. Bağımlılıkları ve Derleyiciyi Kur
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller
 
-    - name: 2. PyInstaller ile Zırhlı Live-Scraper .EXE Döv
+    - name: 2. Apex Sovereign Zırhlı .EXE Döv
       run: |
-        # --collect-all customtkinter     : Modern arayüz temaları için
-        # --collect-all duckduckgo_search : Canlı arama motorunun gizli SSL kalkanlarını .exe'ye gömmek için!
-        pyinstaller --onefile --noconsole --clean --collect-all customtkinter --collect-all duckduckgo_search --hidden-import pyttsx3.drivers.sapi5 --name "MIKU_DeepScan_v1.2" agent.py
+        pyinstaller --onefile --noconsole --clean --collect-all customtkinter --hidden-import pyttsx3.drivers.sapi5 --name "MIKU_Apex_Sovereign" agent.py
 
-    - name: 3. Üretilen Siber Ajanı GitHub'a Yükle
-      uses: actions/upload-artifact@v4
+    - name: 3. Ganimeti Resmi GitHub Releases Vitrinine Çivile
+      uses: softprops/action-gh-release@v2
       with:
-        name: MIKU-Live-Ajan-v1.2
-        path: dist/MIKU_DeepScan_v1.2.exe
-        compression-level: 0
+        tag_name: "v4.0-APEX"
+        name: "M.I.K.U. // APEX SOVEREIGN (Resmi Dağıtım)"
+        body: |
+          🤖 **M.I.K.U. Otonom Çekirdek Ajanı v4.0**
+          
+          * **Zeka Mimarisi:** %100 Yerel NLP Vektör Motoru (Sıfır VRAM tüketimi)
+          * **Guvenlik:** Çekirdek Seviyesi Windows UAC Yönetici Kalkanı
+          * **Öne Çıkanlar:** SoundCloud Direkt Link Sniper & Hayalet Pencere Dirilişi
+          
+          ---
+          ### 🚀 Kurulum Talimatı:
+          Aşağıdaki **`MIKU_Apex_Sovereign.exe`** dosyasına tıklayıp indirin. Hiçbir kurucu, Python veya ek yapay zeka programı gerektirmez. Çift tıklayın ve mikrofona *"Hey Miku"* deyin.
+        files: dist/MIKU_Apex_Sovereign.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
