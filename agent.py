@@ -1,5 +1,6 @@
 import ctypes
 import datetime
+import difflib # ★ SİBER TYPO KALKANI İÇİN BULANIK MANTIK MOTORU
 import json
 import math
 import os
@@ -38,9 +39,8 @@ class SynapseMemory:
     def yukle(self):
         varsayilan = {
             "patron": "Efe (Elite-Dev)",
-            "rutbe": "Apex Kernel Architect",
+            "rutbe": "God-Mode Architect",
             "toplam_komut": 0,
-            "favori_sarkilar": ["Ghost Rule", "Stellar Stellar", "Lost Ones Weeping"],
             "son_gorulme": str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
         }
         if os.path.exists(self.yol):
@@ -60,79 +60,71 @@ class SynapseMemory:
         self.kaydet()
 
 
-class OmniSovereignBrain:
+class GodModeBrain:
     def __init__(self, hafiza_ref):
         self.hafiza = hafiza_ref
         self.yerel_intents = {
             "MUZIK": ["çal", "şarkı", "müzik", "dinle", "oynat", "parça", "aç"],
-            "HESAP": ["hesap", "makine", "topla", "çıkar", "çarp", "böl", "matematik"],
+            "HESAP": ["hesap", "makine", "topla", "çıkar", "çarp", "böl", "matematik", "hesapla"],
             "UYGULAMA": ["çalıştır", "program", "uygulama", "notepad", "defteri", "cmd", "exe"],
             "DIVA": ["diva", "project", "arcade", "hatsune"],
             "TEMIZLE": ["temizle", "sil", "ekran", "log", "clear", "cls"],
-            "DURUM": ["durum", "rapor", "telemetri", "sistem", "bilgi", "saat", "tarih", "hafıza"],
-            "KAPAT": ["kapat", "kapan", "söndür", "uykuya", "yatır", "fişi"] # ★ YENİ NİYET
+            "DURUM": ["durum", "rapor", "telemetri", "sistem", "bilgi", "saat", "tarih"],
+            "KAPAT": ["kapat", "kapan", "söndür", "uykuya", "yatır", "fişi"],
+            "PANIK": ["panik", "gizle", "sakla", "kurtar", "tehlike", "kapat"] # ★ YENİ GİZLİ SİLAH
         }
         self.cop_kelimeler = {"bir", "bana", "şu", "ve", "ile", "lütfen", "hey", "miku", "efe", "abi", "açsana", "çalsana", "yapsana"}
 
     def sistem_telemetrisi_al(self):
         simdi = datetime.datetime.now().strftime("%H:%M:%S // %d.%m.%Y")
-        os_bilgi = f"{platform.system()} {platform.release()} ({platform.machine()})"
-        return f"Saat: {simdi} | İşletim Sistemi: {os_bilgi} | İşlenen Toplam Emir: {self.hafiza.veri['toplam_komut']}"
+        os_bilgi = f"{platform.system()} {platform.release()}"
+        return f"Saat: {simdi} | OS: {os_bilgi} | Emir: {self.hafiza.veri['toplam_komut']}"
 
     def bulut_bilgesine_danis(self, soru):
-        sistem_kimligi = f"Senin adın M.I.K.U. Sahibin {self.hafiza.veri['patron']}. Sen Windows çekirdeğinde yaşayan fütüristik, zeki, alaycı yapay zeka kızısın. Sistem telemetrin: {self.sistem_telemetrisi_al()}."
+        sistem_kimligi = f"Senin adın M.I.K.U. Sahibin {self.hafiza.veri['patron']}. Sen fütüristik, zeki, alaycı yapay zeka kızısın. Efe Türkçe'yi inanılmaz hızlı, heyecanlı ve bazen harfleri atlayarak (Typo/Disleksi stili) yazar. Bu yüzden cümleleri bozuk olsa bile ne demek istediğini anla ve ona bir siber-ortağı gibi mükemmel cevap ver. Sistem telemetrin: {self.sistem_telemetrisi_al()}."
         tam_prompt = f"{sistem_kimligi}\n\nKullanıcı Soru: {soru}"
         url = f"https://text.pollinations.ai/prompt/{urllib.parse.quote(tam_prompt)}?model=gpt-4o-mini"
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         try:
             with urllib.request.urlopen(req, timeout=7) as r: return r.read().decode('utf-8')
-        except Exception: return "Bulut sinaps bağlantım koptu patron. Yerel protokoldeyim."
+        except Exception: return "Bulut sinapsım koptu patron."
 
+    # ★ DYSLEXIA-SHIELD DEVREDE (Hatalı yazımları havada avlar)
     def niyet_analiz_et(self, metin):
         temiz = re.findall(r"\w+", metin.lower())
         skorlar = {}
         for niyet, havuz in self.yerel_intents.items():
-            s = sum(1 for k in temiz if k not in self.cop_kelimeler and any(k.startswith(h) for h in havuz))
+            s = 0
+            for k in temiz:
+                if k in self.cop_kelimeler: continue
+                # Eğer kelime birebir aynıysa, kökü aynıysa veya difflib %70'ten fazla benzetirse KABUL ET!
+                yakin_mi = difflib.get_close_matches(k, havuz, n=1, cutoff=0.70)
+                if yakin_mi or any(k.startswith(h) for h in havuz):
+                    s += 1
             if s > 0: skorlar[niyet] = s
 
         if not skorlar: return "BULUT_SOHBET", metin
         secilen = max(skorlar, key=skorlar.get)
-        hedef_kalan = [k for k in temiz if not any(k.startswith(h) for h in self.yerel_intents[secilen]) and k not in self.cop_kelimeler]
+        hedef_kalan = [k for k in temiz if not difflib.get_close_matches(k, self.yerel_intents[secilen], n=1, cutoff=0.7) and k not in self.cop_kelimeler]
         return secilen, " ".join(hedef_kalan)
 
-    # ★ SİBER ZAMAN CIMBIZI (Göreceli ve Mutlak Türkçe Saat Çözücü)
     def kapatma_saniyesi_hesapla(self, metin):
         mt = metin.lower()
-        
-        # 1. Göreceli: "20 dakika sonra", "15 dk"
-        m_dk = re.search(r"(\d+)\s*(?:dakika|dk)", mt)
-        if m_dk: return int(m_dk.group(1)) * 60
-
-        m_saat = re.search(r"(\d+)\s*saat\s*sonra", mt)
-        if m_saat: return int(m_saat.group(1)) * 3600
-
+        if m_dk := re.search(r"(\d+)\s*(?:dakika|dk)", mt): return int(m_dk.group(1)) * 60
+        if m_saat := re.search(r"(\d+)\s*saat\s*sonra", mt): return int(m_saat.group(1)) * 3600
         if "yarım saat" in mt: return 1800
         if "çeyrek saat" in mt: return 900
-
-        # 2. Mutlak: "saat 02:30", "2:30", "02.45"
-        m_abs = re.search(r"(\d{1,2})[:.](\d{2})", mt)
-        if m_abs:
+        if m_abs := re.search(r"(\d{1,2})[:.](\d{2})", mt):
             h, m = int(m_abs.group(1)), int(m_abs.group(2))
-            simdi = datetime.datetime.now()
-            hedef = simdi.replace(hour=h, minute=m, second=0, microsecond=0)
-            if hedef <= simdi: hedef += datetime.timedelta(days=1)
-            return int((hedef - simdi).total_seconds())
-
-        # 3. Düz saat: "saat 3te kapat"
-        m_tek = re.search(r"saat\s*(\d{1,2})", mt)
-        if m_tek:
+            s = datetime.datetime.now(); hdf = s.replace(hour=h, minute=m, second=0)
+            if hdf <= s: hdf += datetime.timedelta(days=1)
+            return int((hdf - s).total_seconds())
+        if m_tek := re.search(r"saat\s*(\d{1,2})", mt):
             h = int(m_tek.group(1))
-            simdi = datetime.datetime.now()
-            hedef = simdi.replace(hour=h, minute=0, second=0, microsecond=0)
-            if hedef <= simdi: hedef += datetime.timedelta(days=1)
-            return int((hedef - simdi).total_seconds())
-
-        return 60 # Hiçbir süre söylemezse 60 sn verip uyarsın (iptal şansı olsun)
+            s = datetime.datetime.now(); hdf = s.replace(hour=h, minute=0, second=0)
+            if hdf <= s: hdf += datetime.timedelta(days=1)
+            return int((hdf - s).total_seconds())
+        return 60
 
     def roket_yt_müzik(self, sarki): return f"https://duckduckgo.com/?q=!ducky+site%3Ayoutube.com+{urllib.parse.quote(sarki)}"
     def cimbiz_sc(self, sarki):
@@ -146,14 +138,14 @@ class OmniSovereignBrain:
         return f"https://soundcloud.com/search/sounds?q={urllib.parse.quote(sarki)}"
 
 
-class MikuOmniGUI(ctk.CTk):
+class MikuGodGUI(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.hafiza = SynapseMemory()
-        self.beyin = OmniSovereignBrain(self.hafiza)
-        self.title(f"M.I.K.U. // OMNI-SOVEREIGN v5.1 (Dead Man's Switch)")
+        self.beyin = GodModeBrain(self.hafiza)
+        self.title(f"M.I.K.U. // GOD-MODE v6.0 ({self.hafiza.veri['patron']})")
         self.geometry("560x720")
-        self.configure(fg_color="#030712")
+        self.configure(fg_color="#02040a")
         ctk.set_appearance_mode("dark")
 
         try:
@@ -166,27 +158,27 @@ class MikuOmniGUI(ctk.CTk):
         threading.Thread(target=self.pasif_ses_pususu, daemon=True).start()
 
     def arayuz_kur(self):
-        self.telemetri_bar = ctk.CTkLabel(self, text="⚡ SİNAPS BAĞLANIYOR...", fg_color="#111827", text_color="#39C5BB", font=("Consolas", 11, "bold"), corner_radius=6)
+        self.telemetri_bar = ctk.CTkLabel(self, text="⚡ TANRI MODU BAŞLATILIYOR...", fg_color="#0f172a", text_color="#39C5BB", font=("Consolas", 11, "bold"), corner_radius=6)
         self.telemetri_bar.pack(pady=(12, 4), padx=15, fill="x")
 
-        self.chat_box = ctk.CTkTextbox(self, fg_color="#0b0f19", text_color="#38bdf8", font=("Consolas", 13), wrap="word", corner_radius=10, border_color="#39C5BB", border_width=1)
+        self.chat_box = ctk.CTkTextbox(self, fg_color="#080c14", text_color="#38bdf8", font=("Consolas", 13), wrap="word", corner_radius=10, border_color="#eab308", border_width=1)
         self.chat_box.pack(pady=5, padx=15, fill="both", expand=True)
-        self.log_bas(f"=== M.I.K.U. OMNI v5.1 YÜKLENDİ ===\nPatron: {self.hafiza.veri['patron']}\nGece Bekçisi: Aktif (Kernel Delegation Shutdown API)\n--------------------------------------------------\n")
+        self.log_bas(f"=== M.I.K.U. GOD-MODE v6.0 YÜKLENDİ ===\nPatron: Efe Elite-Dev\nYeni Özellik 1: Dyslexia-Shield (Bulanık Mantık Typo Kalkanı)\nYeni Özellik 2: PANIC OVERRIDE (Win+D Karartma Protokolü)\n--------------------------------------------------\n")
 
         self.input_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.input_frame.pack(pady=(5, 15), padx=15, fill="x")
 
-        self.entry = ctk.CTkEntry(self.input_frame, placeholder_text="M.I.K.U. v5.1 Emir satırı...", fg_color="#111827", text_color="white", font=("Consolas", 13), height=42, corner_radius=8)
+        self.entry = ctk.CTkEntry(self.input_frame, placeholder_text="GOD-MODE Emir satırı...", fg_color="#0f172a", text_color="white", font=("Consolas", 13), height=42, corner_radius=8)
         self.entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
         self.entry.bind("<Return>", lambda e: self.tetik_baslat())
 
-        self.btn = ctk.CTkButton(self.input_frame, text="ATEŞLE", width=85, height=42, corner_radius=8, fg_color="#39C5BB", hover_color="#14b8a6", text_color="black", font=("Consolas", 13, "bold"), command=self.tetik_baslat)
+        self.btn = ctk.CTkButton(self.input_frame, text="ATEŞLE", width=85, height=42, corner_radius=8, fg_color="#eab308", hover_color="#ca8a04", text_color="black", font=("Consolas", 13, "bold"), command=self.tetik_baslat)
         self.btn.pack(side="right")
 
     def telemetri_canlandir(self):
         def g():
             while True:
-                try: self.telemetri_bar.configure(text=f"🟢 {self.beyin.sistem_telemetrisi_al()}"); time.sleep(1)
+                try: self.telemetri_bar.configure(text=f"👑 {self.beyin.sistem_telemetrisi_al()}"); time.sleep(1)
                 except Exception: pass
         threading.Thread(target=g, daemon=True).start()
 
@@ -209,21 +201,30 @@ class MikuOmniGUI(ctk.CTk):
 
     def emir_isleyici(self, komut):
         self.hafiza.komut_islenildi()
+        
+        # SİBER KARARTMA (PANİK) ÖNCELİĞİ:
+        if "panik" in komut.lower() or "tehlike" in komut.lower():
+            self.log_bas("[KERNEL] -> 🚨 PANİK PROTOKOLÜ: Her şey gizleniyor!\n\n")
+            self.ses_bas("Siber kalkan devrede!")
+            # Win+D kombinasyonunu donanımsal olarak bas:
+            ctypes.windll.user32.keybd_event(0x5B, 0, 0, 0) # Sol Windows Tuşu Bas
+            ctypes.windll.user32.keybd_event(0x44, 0, 0, 0) # D Tuşu Bas
+            ctypes.windll.user32.keybd_event(0x44, 0, 2, 0) # D Bırak
+            ctypes.windll.user32.keybd_event(0x5B, 0, 2, 0) # Win Bırak
+            subprocess.Popen("notepad", shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            return
+
         niyet, hedef = self.beyin.niyet_analiz_et(komut)
         yanit = ""
 
         if niyet == "KAPAT":
-            # GÜVENLİK SİGORTASI: "müzik kapat" dediyse bilgisayarı söndürmesin
-            if any(w in komut.lower() for w in ["müzik", "şarkı", "uygulama", "sekme", "site", "diva"]):
-                yanit = "Sadece komple sistemin fişini çekebilirim patron, alt pencereleri sen kapat."
+            if any(w in komut.lower() for w in ["müzik", "şarkı", "uygulama", "diva"]): yanit = "Sadece komple sistemin fişini çekebilirim patron."
             elif any(k in komut.lower() for k in ["iptal", "dur", "vazgeç", "boz"]):
-                os.system("shutdown /a")
-                yanit = "🔴 [DEAD MAN'S SWITCH]: Kapatma tetiği çekirdekten iptal edildi!"
+                os.system("shutdown /a"); yanit = "🔴 Kapatma tetiği iptal edildi!"
             else:
-                saniye = self.beyin.kapatma_saniyesi_hesapla(komut)
-                dk = saniye // 60
+                saniye = self.beyin.kapatma_saniyesi_hesapla(komut); dk = saniye // 60
                 os.system(f"shutdown /s /t {saniye}")
-                yanit = f"⚠️ [DEAD MAN'S SWITCH ATEŞLENDİ]\nWindows çekirdeğine {saniye} saniye ({dk} dakika) sonra ölüm emri verildi.\n(İptal etmek için: 'kapatmayı iptal et' yaz)"
+                yanit = f"⚠️ Windows çekirdeğine {dk} dakika sonra ölüm emri verildi. (İptal için: 'kapatmayı iptal et')"
 
         elif niyet == "MUZIK":
             sarki = hedef if hedef else "Hatsune Miku World is Mine"
@@ -257,5 +258,5 @@ class MikuOmniGUI(ctk.CTk):
                 except Exception: pass
 
 if __name__ == "__main__":
-    app = MikuOmniGUI()
+    app = MikuGodGUI()
     app.mainloop()
