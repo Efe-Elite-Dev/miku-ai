@@ -32,12 +32,12 @@ if sys.stderr is None: sys.stderr = open(os.devnull, "w")
 
 
 # =====================================================================
-# ★ EFE ELİTE-DEV // TÜRKÇE EK BÜKÜCÜLÜ YAPAY ZEKA BEYNİ (v4.0)
+# ★ EFE ELİTE-DEV // OTO-BAŞLATMALI YAPAY ZEKA BEYNİ (v4.1)
 # =====================================================================
 class EliteDevApexBrain:
     def __init__(self):
         self.intents = {
-            "MUZIK": ["çal", "şarkı", "müzik", "dinle", "oynat", "soundcloud", "parça", "koy", "aç"],
+            "MUZIK": ["çal", "şarkı", "müzik", "dinle", "oynat", "parça", "koy", "aç"],
             "HESAP": ["hesap", "makine", "topla", "çıkar", "çarp", "böl", "matematik", "hesapla"],
             "UYGULAMA": ["çalıştır", "program", "uygulama", "notepad", "defteri", "cmd", "exe", "yazı"],
             "DIVA": ["diva", "project", "arcade", "hatsune", "future", "tone"],
@@ -45,12 +45,11 @@ class EliteDevApexBrain:
             "SOHBET": ["merhaba", "selam", "naber", "nasılsın", "kimsin", "miku", "hey", "sa"]
         }
 
-        # Türkçe sondan eklemeli dil çöpleri:
         self.cop_kelimeler = {
             "bir", "bana", "şu", "ve", "ile", "mi", "mı", "mu", "mü", "lütfen", 
             "da", "de", "hey", "miku", "heymiku", "dan", "den", "yı", "yi", "ya",
             "nu", "nü", "şarkısını", "uygulaması", "eder", "misin", "mısın", "efe",
-            "abi", "istiyorum", "açsana", "çalsana", "yapsana", "sana", "koysana"
+            "abi", "istiyorum", "açsana", "çalsana", "yapsana", "sana", "koysana", "soundcloud", "tan"
         }
 
         self.sohbet_cevaplari = {
@@ -62,12 +61,10 @@ class EliteDevApexBrain:
         }
 
     def turkce_kok_eslesti_mi(self, u_kelimeler, havuz_kelimeleri):
-        """Türkçe sondan bükümlü ekleri havada kesen acımasız morfoloji motoru"""
         skor = 0
         for u in u_kelimeler:
             if u in self.cop_kelimeler: continue
             for h in havuz_kelimeleri:
-                # Örn: 'çalsana' kelimesi 'çal' köküyle başlar -> Eşleşti!
                 if u.startswith(h) or h.startswith(u):
                     skor += 1
                     break
@@ -86,22 +83,24 @@ class EliteDevApexBrain:
                 en_iyi_skor = skor
                 secilen_niyet = niyet
 
-        # Hedef Şarkı / Uygulama ismini ayıkla:
         hedef_kalanlar = [k for k in temiz_kelimeler if not any(k.startswith(h) for h in self.intents[secilen_niyet])]
         hedef_obje = " ".join([x for x in hedef_kalanlar if x not in self.cop_kelimeler])
 
         return secilen_niyet, hedef_obje
 
-    # --- SOUNDCLOUD DIRECT TRACK SNIPER ---
+    # ★ SİBER ROKET: YOUTUBE NATIVE AUTOPLAY TUNNEL
+    def aninda_calan_muzik_roketle(self, sarki_adi):
+        """DuckDuckGo '!ducky' bang'i ile tarayıcıyı doğrudan şarkının saniyesinde çalan Youtube adresine zıplatır"""
+        temiz_sorgu = urllib.parse.quote(f"{sarki_adi}")
+        return f"https://duckduckgo.com/?q=!ducky+site%3Ayoutube.com+{temiz_sorgu}"
+
     def direkt_sc_linki_cimbizla(self, sarki_adi):
         url = f"https://soundcloud.com/search?q={urllib.parse.quote(sarki_adi)}"
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         try:
             html = urllib.request.urlopen(req, timeout=5).read().decode('utf-8', errors='ignore')
-            # SoundCloud SEO ham HTML verisinden ilk parça linkini kes:
-            eslesme = re.search(r'<li><a href="(/[^"/]+/[^"/]+)">', html)
-            if eslesme:
-                return f"https://soundcloud.com{eslesme.group(1)}"
+            esl = re.search(r'<li><a href="(/[^"/]+/[^"/]+)">', html)
+            if esl: return f"https://soundcloud.com{esl.group(1)}"
         except Exception: pass
         return f"https://soundcloud.com/search/sounds?q={urllib.parse.quote(sarki_adi)}"
 
@@ -109,7 +108,7 @@ class EliteDevApexBrain:
 class MikuApexGUI(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("M.I.K.U. // APEX SOVEREIGN v4.0 (Admin Protected)")
+        self.title("M.I.K.U. // APEX SOVEREIGN v4.1 (Instant Autoplay)")
         self.geometry("540x700")
         self.configure(fg_color="#040811")
         ctk.set_appearance_mode("dark")
@@ -124,14 +123,14 @@ class MikuApexGUI(ctk.CTk):
         threading.Thread(target=self.pasif_ses_pususu, daemon=True).start()
 
     def arayuzu_kur(self):
-        self.status_bar = ctk.CTkLabel(self, text="🟢 M.I.K.U. v4.0 // YÖNETİCİ İZNİ & SES PUSUSU DEVREDE", 
+        self.status_bar = ctk.CTkLabel(self, text="🟢 M.I.K.U. v4.1 // ANINDA OYNATMA ZIRHI AKTİF", 
                                        fg_color="#0d1526", text_color="#39C5BB", font=("Consolas", 12, "bold"), corner_radius=8)
         self.status_bar.pack(pady=(15, 5), padx=15, fill="x")
 
         self.chat_box = ctk.CTkTextbox(self, fg_color="#080c18", text_color="#00b4d8", font=("Consolas", 13), 
                                        wrap="word", corner_radius=10, border_color="#39C5BB", border_width=1)
         self.chat_box.pack(pady=5, padx=15, fill="both", expand=True)
-        self.log_bas("=== M.I.K.U. APEX SOVEREIGN v4.0 YÜKLENDİ ===\nPatron: Efe Elite-Dev\nYetki Seviyesi: Full Administrator (UAC Elevated)\nÖzellikler: SC Auto-Play Sniper + Hayalet Pencere Dirilişi\n--------------------------------------------------\n")
+        self.log_bas("=== M.I.K.U. APEX SOVEREIGN v4.1 YÜKLENDİ ===\nPatron: Efe Elite-Dev\nHotfix: Müzik talep edildiğinde tarayıcı kilitleri baypas edilip %100 otomatik oynatma tetiklenir.\n--------------------------------------------------\n")
 
         self.input_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.input_frame.pack(pady=(5, 15), padx=15, fill="x")
@@ -154,14 +153,10 @@ class MikuApexGUI(ctk.CTk):
             try: self.tts.say(metin); self.tts.runAndWait()
             except Exception: pass
 
-    # --- PENCEREYİ OYUNUN VEYA ARKADAKİ UYGULAMANIN ÜSTÜNE FIRLAT ---
     def hayalet_dirilis_yap(self):
         try:
-            self.deiconify() # Simgedeyse aç
-            self.lift()      # En üste taşı
-            self.focus_force() # Klavyeyi buna sapla
-            self.attributes('-topmost', True)
-            self.attributes('-topmost', False)
+            self.deiconify(); self.lift(); self.focus_force()
+            self.attributes('-topmost', True); self.attributes('-topmost', False)
         except Exception: pass
 
     def gonder_tetik(self):
@@ -178,11 +173,20 @@ class MikuApexGUI(ctk.CTk):
         yanit = ""
 
         if niyet == "MUZIK":
-            sarki = hedef if hedef else "Ghost Rule"
-            self.status_bar.configure(text="⚡ [SNIPER] SOUNDCLOUD LİNKİ CIMBIZLANIYOR...")
-            sc_direkt_url = self.beyin.direkt_sc_linki_cimbizla(sarki)
-            yanit = f"'{sarki}' doğrudan tarayıcıya patlatılıyor patron."
-            webbrowser.open(sc_direkt_url)
+            sarki = hedef if hedef else "Hatsune Miku World is Mine"
+            
+            # Eğer cümlede özellikle "soundcloud" kelimesi geçiyorsa orayı açar (ama pause başlar)
+            if "soundcloud" in komut.lower():
+                self.status_bar.configure(text="⚡ [SNIPER] SOUNDCLOUD LİNKİ ÇEKİLİYOR...")
+                sc_url = self.beyin.direkt_sc_linki_cimbizla(sarki)
+                yanit = f"SoundCloud '{sarki}' açıldı (Play'e basman gerekebilir)."
+                webbrowser.open(sc_url)
+            else:
+                # Sadece "müzik çal", "şarkı aç" dendiyse YOUTUBE AUTOPLAY roketini ateşler!
+                self.status_bar.configure(text="⚡ [AUTOPLAY] YOUTUBE SES ROKETİ ATEŞLENİYOR...")
+                yt_oto_url = self.beyin.aninda_calan_muzik_roketle(sarki)
+                yanit = f"'{sarki}' %100 otomatik çalmak üzere ateşlendi patron!"
+                webbrowser.open(yt_oto_url)
 
         elif niyet == "HESAP":
             yanit = "Hesap makinesi bulut terminaline yönlendirildi."
@@ -208,10 +212,9 @@ class MikuApexGUI(ctk.CTk):
             if not yanit: yanit = "Frekans anlaşılmadı. (Müzik aç, hesap makinesi de ya da uygulama adı söyle)"
 
         self.log_bas(f"[M.I.K.U.] >>> {yanit}\n\n")
-        self.status_bar.configure(text="🟢 M.I.K.U. v4.0 // YÖNETİCİ İZNİ & SES PUSUSU DEVREDE")
+        self.status_bar.configure(text="🟢 M.I.K.U. v4.1 // ANINDA OYNATMA ZIRHI AKTİF")
         self.ses_bas(yanit)
 
-    # --- DEMİR ADAM SES PUSUSU ---
     def pasif_ses_pususu(self):
         r = sr.Recognizer()
         with sr.Microphone() as kaynak:
@@ -220,18 +223,13 @@ class MikuApexGUI(ctk.CTk):
                 try:
                     ses = r.listen(kaynak, phrase_time_limit=2.5)
                     tetik = r.recognize_google(ses, language="tr-TR").lower()
-                    
                     if any(x in tetik for x in ["miku", "hey miku", "heymiku", "miko", "mikü"]):
-                        # 1. PENCEREYİ EN ÜSTE FIRLAT
                         self.hayalet_dirilis_yap()
-                        
                         self.status_bar.configure(text="🎙️ M.I.K.U. DİNLİYOR // SÖYLE PATRON...")
                         self.ses_bas("Efendim patron?")
-                        
                         k_ses = r.listen(kaynak, phrase_time_limit=6)
                         k_metin = r.recognize_google(k_ses, language="tr-TR")
                         self.log_bas(f"[🎙️ Sesli Komut] >>> {k_metin}\n")
-                        
                         threading.Thread(target=self.motoru_calistir, args=(k_metin,), daemon=True).start()
                 except Exception: pass
 
