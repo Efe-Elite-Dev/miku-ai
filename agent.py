@@ -16,7 +16,7 @@ import webbrowser
 import customtkinter as ctk
 import pyttsx3
 import speech_recognition as sr
-import winsound # ★ YENİ: SIFIR GECİKMELİ "BLOOP" SESİ İÇİN
+import winsound
 
 def uac_yonetici_kalkani():
     try:
@@ -26,6 +26,12 @@ def uac_yonetici_kalkani():
     except Exception: pass
 
 uac_yonetici_kalkani()
+
+# =====================================================================
+# ★★★ UYANDIRMA KELİMELERİNİ BURADAN İSTEDİĞİN GİBİ DEĞİŞTİR ★★★
+# =====================================================================
+UYANDIRMA_KELIMELERI = ["hey miku", "heymiku", "miku", "sistem uyan", "uyan"]
+
 
 if sys.stdin is None: sys.stdin = open(os.devnull, "r")
 if sys.stdout is None: sys.stdout = open(os.devnull, "w")
@@ -82,7 +88,7 @@ class GodModeBrain:
         return f"Saat: {simdi} | OS: {os_bilgi} | Emir: {self.hafiza.veri['toplam_komut']}"
 
     def bulut_bilgesine_danis(self, soru):
-        sistem_kimligi = f"Senin adın M.I.K.U. Sahibin {self.hafiza.veri['patron']}. Sen fütüristik, zeki, alaycı yapay zeka kızısın. Efe Türkçe'yi inanılmaz hızlı, heyecanlı ve bazen harfleri atlayarak (Typo/Disleksi stili) yazar. Bu yüzden cümleleri bozuk olsa bile ne demek istediğini anla ve ona bir siber-ortağı gibi mükemmel cevap ver. Sistem telemetrin: {self.sistem_telemetrisi_al()}."
+        sistem_kimligi = f"Senin adın M.I.K.U. Sahibin {self.hafiza.veri['patron']}. Sen fütüristik, zeki, alaycı yapay zeka kızısın. Efe Türkçe'yi inanılmaz hızlı, heyecanlı ve bazen harfleri atlayarak yazar. Bu yüzden cümleleri bozuk olsa bile ne demek istediğini anla ve ona bir siber-ortağı gibi mükemmel cevap ver. Sistem telemetrin: {self.sistem_telemetrisi_al()}."
         tam_prompt = f"{sistem_kimligi}\n\nKullanıcı Soru: {soru}"
         url = f"https://text.pollinations.ai/prompt/{urllib.parse.quote(tam_prompt)}?model=gpt-4o-mini"
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -142,7 +148,7 @@ class MikuGodGUI(ctk.CTk):
         super().__init__()
         self.hafiza = SynapseMemory()
         self.beyin = GodModeBrain(self.hafiza)
-        self.title(f"M.I.K.U. // GOD-MODE v6.1 ({self.hafiza.veri['patron']})")
+        self.title(f"M.I.K.U. // GOD-MODE v6.2 (UX Overhaul)")
         self.geometry("560x720")
         self.configure(fg_color="#02040a")
         ctk.set_appearance_mode("dark")
@@ -158,11 +164,16 @@ class MikuGodGUI(ctk.CTk):
 
     def arayuz_kur(self):
         self.telemetri_bar = ctk.CTkLabel(self, text="⚡ TANRI MODU BAŞLATILIYOR...", fg_color="#0f172a", text_color="#39C5BB", font=("Consolas", 11, "bold"), corner_radius=6)
-        self.telemetri_bar.pack(pady=(12, 4), padx=15, fill="x")
+        self.telemetri_bar.pack(pady=(12, 0), padx=15, fill="x")
+
+        # ★ SİBER DİNLEME ANİMASYONU (ProgressBar)
+        self.ses_animasyon = ctk.CTkProgressBar(self, mode="indeterminate", fg_color="#0f172a", progress_color="#eab308", height=4)
+        self.ses_animasyon.pack(pady=(2, 4), padx=15, fill="x")
+        self.ses_animasyon.set(0) # Başlangıçta hareketsiz
 
         self.chat_box = ctk.CTkTextbox(self, fg_color="#080c14", text_color="#38bdf8", font=("Consolas", 13), wrap="word", corner_radius=10, border_color="#eab308", border_width=1)
         self.chat_box.pack(pady=5, padx=15, fill="both", expand=True)
-        self.log_bas(f"=== M.I.K.U. GOD-MODE v6.1 YÜKLENDİ ===\nPatron: Efe Elite-Dev\nHotfix: %100 'Hey Google' Ses Protokolü Aktif.\n(Tek nefeste komut veya Ping sesi bekleme desteği)\n--------------------------------------------------\n")
+        self.log_bas(f"=== M.I.K.U. GOD-MODE v6.2 YÜKLENDİ ===\nPatron: Efe Elite-Dev\nHotfix: Kinetik Animasyon Barı eklendi.\nHotfix: 'Duyamadım/Anlayamadım' hata blokları yazıldı.\nHotfix: Uyandırma kelimesi serbest bırakıldı.\n--------------------------------------------------\n")
 
         self.input_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.input_frame.pack(pady=(5, 15), padx=15, fill="x")
@@ -238,49 +249,65 @@ class MikuGodGUI(ctk.CTk):
         self.log_bas(f"[M.I.K.U.] >>> {yanit}\n\n"); self.ses_bas(yanit)
 
     # =====================================================================
-    # ★ KUSURSUZ "HEY GOOGLE" SES PROTOKOLÜ (v6.1 HOTFIX)
+    # ★ KUSURSUZ ANİMASYONLU VE HATA AYIKLAMALI SES PROTOKOLÜ
     # =====================================================================
     def pasif_ses_pususu(self):
         r = sr.Recognizer()
-        r.energy_threshold = 300 # Sesi daha hassas duyması için
+        r.energy_threshold = 300 
         r.dynamic_energy_threshold = True
 
         with sr.Microphone() as kynk:
             r.adjust_for_ambient_noise(kynk, duration=1.0)
             while True:
                 try:
-                    # 1. Aşama: Odayı dinle (Kısa paketler halinde)
+                    # 1. Aşama: Arka planda odayı dinle
                     ses = r.listen(kynk, phrase_time_limit=4)
                     t = r.recognize_google(ses, language="tr-TR").lower()
                     
-                    tetikler = ["hey miku", "heymiku", "miku", "miko", "mikü"]
-                    
-                    if any(x in t for x in tetikler):
+                    if any(x in t for x in UYANDIRMA_KELIMELERI):
                         self.hayalet_dirilis()
                         
-                        # Acaba "Hey Miku müzik aç" diye TEK NEFESTE mi söyledi?
+                        # Tek nefes kontrolü
                         kalan_komut = t
-                        for tetik in tetikler:
+                        for tetik in UYANDIRMA_KELIMELERI:
                             if tetik in kalan_komut:
                                 kalan_komut = kalan_komut.split(tetik)[-1].strip()
                         
-                        # Eğer tek nefeste emri de verdiyse bekleme, direkt vur!
                         if len(kalan_komut) > 2:
                             self.log_bas(f"[🎙️ Hızlı Komut] >>> {kalan_komut}\n")
                             threading.Thread(target=self.emir_isleyici, args=(kalan_komut,), daemon=True).start()
                             continue
                             
-                        # Eğer SADECE "Hey Miku" dediyse (ikinci komutu bekliyorsa):
-                        # Konuşma motorunu bekletmek yerine anında "Ping" (Bloop) sesi ver!
+                        # 2. Aşama: Uyandı ve ikinci komutu bekliyor!
                         winsound.MessageBeep(winsound.MB_ICONASTERISK)
-                        self.telemetri_bar.configure(text="🎙️ M.I.K.U. DİNLİYOR...")
                         
-                        # Şimdi komutu bekle:
-                        k_ses = r.listen(kynk, timeout=4, phrase_time_limit=6)
-                        k_mtn = r.recognize_google(k_ses, language="tr-TR")
-                        self.log_bas(f"[🎙️ İkinci Komut] >>> {k_mtn}\n")
-                        threading.Thread(target=self.emir_isleyici, args=(k_mtn,), daemon=True).start()
+                        # ★ ANİMASYONU BAŞLAT!
+                        self.ses_animasyon.start()
+                        self.telemetri_bar.configure(text_color="#eab308") # Sararır
+                        
+                        try:
+                            # 6 saniye boyunca konuşmanı bekler
+                            k_ses = r.listen(kynk, timeout=4, phrase_time_limit=6)
+                            self.ses_animasyon.stop() # ★ ANİMASYONU DURDUR
+                            self.telemetri_bar.configure(text_color="#39C5BB") # Yeşile dön
+                            
+                            k_mtn = r.recognize_google(k_ses, language="tr-TR")
+                            self.log_bas(f"[🎙️ İkinci Komut] >>> {k_mtn}\n")
+                            threading.Thread(target=self.emir_isleyici, args=(k_mtn,), daemon=True).start()
+                            
+                        # ★ HATA DURUMLARI (Sen konuşmazsan veya duyamazsa)
+                        except sr.WaitTimeoutError:
+                            self.ses_animasyon.stop()
+                            self.telemetri_bar.configure(text_color="#39C5BB")
+                            self.log_bas("[🎙️ Sistem] >>> Ses tespit edilemedi.\n\n")
+                            self.ses_bas("Pardon patron, sesini duyamadım.")
+                        except sr.UnknownValueError:
+                            self.ses_animasyon.stop()
+                            self.telemetri_bar.configure(text_color="#39C5BB")
+                            self.log_bas("[🎙️ Sistem] >>> Kelimeler anlaşılamadı.\n\n")
+                            self.ses_bas("Pardon patron, ne dediğini anlayamadım.")
 
+                # Arka plan dinlemesindeki boş gürültüleri görmezden gel
                 except sr.WaitTimeoutError: pass
                 except sr.UnknownValueError: pass
                 except Exception: pass
