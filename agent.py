@@ -1,6 +1,6 @@
 import ctypes
 import datetime
-import difflib # ★ SİBER TYPO KALKANI İÇİN BULANIK MANTIK MOTORU
+import difflib
 import json
 import math
 import os
@@ -16,6 +16,7 @@ import webbrowser
 import customtkinter as ctk
 import pyttsx3
 import speech_recognition as sr
+import winsound # ★ YENİ: SIFIR GECİKMELİ "BLOOP" SESİ İÇİN
 
 def uac_yonetici_kalkani():
     try:
@@ -71,7 +72,7 @@ class GodModeBrain:
             "TEMIZLE": ["temizle", "sil", "ekran", "log", "clear", "cls"],
             "DURUM": ["durum", "rapor", "telemetri", "sistem", "bilgi", "saat", "tarih"],
             "KAPAT": ["kapat", "kapan", "söndür", "uykuya", "yatır", "fişi"],
-            "PANIK": ["panik", "gizle", "sakla", "kurtar", "tehlike", "kapat"] # ★ YENİ GİZLİ SİLAH
+            "PANIK": ["panik", "gizle", "sakla", "kurtar", "tehlike", "kapat"]
         }
         self.cop_kelimeler = {"bir", "bana", "şu", "ve", "ile", "lütfen", "hey", "miku", "efe", "abi", "açsana", "çalsana", "yapsana"}
 
@@ -89,7 +90,6 @@ class GodModeBrain:
             with urllib.request.urlopen(req, timeout=7) as r: return r.read().decode('utf-8')
         except Exception: return "Bulut sinapsım koptu patron."
 
-    # ★ DYSLEXIA-SHIELD DEVREDE (Hatalı yazımları havada avlar)
     def niyet_analiz_et(self, metin):
         temiz = re.findall(r"\w+", metin.lower())
         skorlar = {}
@@ -97,7 +97,6 @@ class GodModeBrain:
             s = 0
             for k in temiz:
                 if k in self.cop_kelimeler: continue
-                # Eğer kelime birebir aynıysa, kökü aynıysa veya difflib %70'ten fazla benzetirse KABUL ET!
                 yakin_mi = difflib.get_close_matches(k, havuz, n=1, cutoff=0.70)
                 if yakin_mi or any(k.startswith(h) for h in havuz):
                     s += 1
@@ -143,7 +142,7 @@ class MikuGodGUI(ctk.CTk):
         super().__init__()
         self.hafiza = SynapseMemory()
         self.beyin = GodModeBrain(self.hafiza)
-        self.title(f"M.I.K.U. // GOD-MODE v6.0 ({self.hafiza.veri['patron']})")
+        self.title(f"M.I.K.U. // GOD-MODE v6.1 ({self.hafiza.veri['patron']})")
         self.geometry("560x720")
         self.configure(fg_color="#02040a")
         ctk.set_appearance_mode("dark")
@@ -163,7 +162,7 @@ class MikuGodGUI(ctk.CTk):
 
         self.chat_box = ctk.CTkTextbox(self, fg_color="#080c14", text_color="#38bdf8", font=("Consolas", 13), wrap="word", corner_radius=10, border_color="#eab308", border_width=1)
         self.chat_box.pack(pady=5, padx=15, fill="both", expand=True)
-        self.log_bas(f"=== M.I.K.U. GOD-MODE v6.0 YÜKLENDİ ===\nPatron: Efe Elite-Dev\nYeni Özellik 1: Dyslexia-Shield (Bulanık Mantık Typo Kalkanı)\nYeni Özellik 2: PANIC OVERRIDE (Win+D Karartma Protokolü)\n--------------------------------------------------\n")
+        self.log_bas(f"=== M.I.K.U. GOD-MODE v6.1 YÜKLENDİ ===\nPatron: Efe Elite-Dev\nHotfix: %100 'Hey Google' Ses Protokolü Aktif.\n(Tek nefeste komut veya Ping sesi bekleme desteği)\n--------------------------------------------------\n")
 
         self.input_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.input_frame.pack(pady=(5, 15), padx=15, fill="x")
@@ -202,15 +201,12 @@ class MikuGodGUI(ctk.CTk):
     def emir_isleyici(self, komut):
         self.hafiza.komut_islenildi()
         
-        # SİBER KARARTMA (PANİK) ÖNCELİĞİ:
         if "panik" in komut.lower() or "tehlike" in komut.lower():
             self.log_bas("[KERNEL] -> 🚨 PANİK PROTOKOLÜ: Her şey gizleniyor!\n\n")
-            self.ses_bas("Siber kalkan devrede!")
-            # Win+D kombinasyonunu donanımsal olarak bas:
-            ctypes.windll.user32.keybd_event(0x5B, 0, 0, 0) # Sol Windows Tuşu Bas
-            ctypes.windll.user32.keybd_event(0x44, 0, 0, 0) # D Tuşu Bas
-            ctypes.windll.user32.keybd_event(0x44, 0, 2, 0) # D Bırak
-            ctypes.windll.user32.keybd_event(0x5B, 0, 2, 0) # Win Bırak
+            ctypes.windll.user32.keybd_event(0x5B, 0, 0, 0)
+            ctypes.windll.user32.keybd_event(0x44, 0, 0, 0)
+            ctypes.windll.user32.keybd_event(0x44, 0, 2, 0)
+            ctypes.windll.user32.keybd_event(0x5B, 0, 2, 0)
             subprocess.Popen("notepad", shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
             return
 
@@ -241,20 +237,52 @@ class MikuGodGUI(ctk.CTk):
 
         self.log_bas(f"[M.I.K.U.] >>> {yanit}\n\n"); self.ses_bas(yanit)
 
+    # =====================================================================
+    # ★ KUSURSUZ "HEY GOOGLE" SES PROTOKOLÜ (v6.1 HOTFIX)
+    # =====================================================================
     def pasif_ses_pususu(self):
         r = sr.Recognizer()
+        r.energy_threshold = 300 # Sesi daha hassas duyması için
+        r.dynamic_energy_threshold = True
+
         with sr.Microphone() as kynk:
             r.adjust_for_ambient_noise(kynk, duration=1.0)
             while True:
                 try:
-                    ses = r.listen(kynk, phrase_time_limit=2.5)
+                    # 1. Aşama: Odayı dinle (Kısa paketler halinde)
+                    ses = r.listen(kynk, phrase_time_limit=4)
                     t = r.recognize_google(ses, language="tr-TR").lower()
-                    if any(x in t for x in ["miku", "hey miku", "heymiku"]):
-                        self.hayalet_dirilis(); self.ses_bas("Emret patron?")
-                        k_ses = r.listen(kynk, phrase_time_limit=6)
+                    
+                    tetikler = ["hey miku", "heymiku", "miku", "miko", "mikü"]
+                    
+                    if any(x in t for x in tetikler):
+                        self.hayalet_dirilis()
+                        
+                        # Acaba "Hey Miku müzik aç" diye TEK NEFESTE mi söyledi?
+                        kalan_komut = t
+                        for tetik in tetikler:
+                            if tetik in kalan_komut:
+                                kalan_komut = kalan_komut.split(tetik)[-1].strip()
+                        
+                        # Eğer tek nefeste emri de verdiyse bekleme, direkt vur!
+                        if len(kalan_komut) > 2:
+                            self.log_bas(f"[🎙️ Hızlı Komut] >>> {kalan_komut}\n")
+                            threading.Thread(target=self.emir_isleyici, args=(kalan_komut,), daemon=True).start()
+                            continue
+                            
+                        # Eğer SADECE "Hey Miku" dediyse (ikinci komutu bekliyorsa):
+                        # Konuşma motorunu bekletmek yerine anında "Ping" (Bloop) sesi ver!
+                        winsound.MessageBeep(winsound.MB_ICONASTERISK)
+                        self.telemetri_bar.configure(text="🎙️ M.I.K.U. DİNLİYOR...")
+                        
+                        # Şimdi komutu bekle:
+                        k_ses = r.listen(kynk, timeout=4, phrase_time_limit=6)
                         k_mtn = r.recognize_google(k_ses, language="tr-TR")
-                        self.log_bas(f"[🎙️ Sesli Giriş] >>> {k_mtn}\n")
+                        self.log_bas(f"[🎙️ İkinci Komut] >>> {k_mtn}\n")
                         threading.Thread(target=self.emir_isleyici, args=(k_mtn,), daemon=True).start()
+
+                except sr.WaitTimeoutError: pass
+                except sr.UnknownValueError: pass
                 except Exception: pass
 
 if __name__ == "__main__":
