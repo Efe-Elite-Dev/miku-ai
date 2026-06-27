@@ -4,7 +4,7 @@ import subprocess
 import ctypes
 
 # =====================================================================
-# 1. YÖNETİCİ İZNİ KALKANI (UAC ELEVATION)
+# 1. YÖNETİCİ İZNİ KALKANI
 # =====================================================================
 def uac_yonetici_kalkani():
     try:
@@ -16,47 +16,77 @@ def uac_yonetici_kalkani():
 uac_yonetici_kalkani()
 
 # =====================================================================
-# ★★★ 2. SİBER-ORGAN KONTROLÜ VE OTO-NAKİL MOTORU (BOOTSTRAPPER) ★★★
+# 2. SIFIR-BAĞIMLILIK OTO-KURULUM (Listeden PIL, psutil ve pyttsx3 KAZINDI!)
 # =====================================================================
 ZORUNLU_KUTUPHANELER = {
     "speech_recognition": "SpeechRecognition",
-    "pyttsx3": "pyttsx3",
     "pyaudio": "PyAudio",
-    "customtkinter": "customtkinter",
-    "psutil": "psutil",
-    "PIL": "pillow"
+    "customtkinter": "customtkinter"
 }
 
 def siber_vucut_tarama_ve_nakil():
-    eksik_organlar = []
-    for modül_adi, pip_adi in ZORUNLU_KUTUPHANELER.items():
+    eksik = [pip for mod, pip in ZORUNLU_KUTUPHANELER.items() if not _k(mod)]
+    if eksik:
+        ctypes.windll.user32.MessageBoxW(0, f"M.I.K.U. Eksik Temel Modüller:\n-> {', '.join(eksik)}\n\nİndirmek için 'Tamam'a basın.", "⚡ M.I.K.U. DERLEYİCİ v7.5", 0x40)
         try:
-            __import__(modül_adi)
-        except ImportError:
-            eksik_organlar.append(pip_adi)
+            subprocess.check_call([sys.executable, "-m", "pip", "install", *eksik])
+            subprocess.Popen([sys.executable] + sys.argv); sys.exit(0)
+        except Exception: sys.exit(1)
 
-    if eksik_organlar:
-        mesaj = f"M.I.K.U. çekirdeğinde eksik siber-organlar tespit edildi:\n\n -> {', '.join(eksik_organlar)}\n\n'Tamam' butonuna bastığınız an sistem internet üzerinden bu paketleri ana bilince nakledecektir. Lütfen 15-20 saniye bekleyin..."
-        ctypes.windll.user32.MessageBoxW(0, mesaj, "⚡ M.I.K.U. OTO-DERLEYİCİ v7.1", 0x40 | 0x1)
-        
-        try:
-            # Arka planda sessizce pip install çak:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", *eksik_organlar])
-            ctypes.windll.user32.MessageBoxW(0, "Siber-organlar başarıyla nakledildi!\nSistem şimdi tam güçle yeniden doğuyor.", "👑 NAKİL BAŞARILI", 0x40)
-            
-            # SİBER REENKARNASYON: Kendini yeni paketlerle baştan başlat ve eskiyi öldür
-            subprocess.Popen([sys.executable] + sys.argv)
-            sys.exit(0)
-        except Exception as hata:
-            ctypes.windll.user32.MessageBoxW(0, f"Organ nakli başarısız oldu (İnternetinizi kontrol edin):\n\n{hata}", "🚨 KERNEL PANIC", 0x10)
-            sys.exit(1)
+def _k(m):
+    try: __import__(m); return True
+    except ImportError: return False
 
-# ★ Nakil motorunu her şeyden önce çalıştır!
 siber_vucut_tarama_ve_nakil()
 
 
 # =====================================================================
-# 3. ANA BİLİNÇ VE STANDART MODÜLLER (Nakil bittiği için artık güvenli)
+# ★★★ 3. BİZİM YAZDIĞIMIZ SAF METAL MOTORLAR (SIFIR KÜTÜPHANE) ★★★
+# =====================================================================
+class FILETIME(ctypes.Structure):
+    _fields_ = [("dwLowDateTime", ctypes.c_ulong), ("dwHighDateTime", ctypes.c_ulong)]
+
+class MEMORYSTATUSEX(ctypes.Structure):
+    _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("sullAvailExtendedVirtual", ctypes.c_ulonglong)]
+
+def saf_metal_telemetri():
+    stat = MEMORYSTATUSEX(); stat.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+    ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat))
+    ram_yuzde = stat.dwMemoryLoad
+
+    def f2i(ft): return (ft.dwHighDateTime << 32) | ft.dwLowDateTime
+    i1, k1, u1 = FILETIME(), FILETIME(), FILETIME()
+    ctypes.windll.kernel32.GetSystemTimes(ctypes.byref(i1), ctypes.byref(k1), ctypes.byref(u1))
+    time.sleep(0.4) 
+    i2, k2, u2 = FILETIME(), FILETIME(), FILETIME()
+    ctypes.windll.kernel32.GetSystemTimes(ctypes.byref(i2), ctypes.byref(k2), ctypes.byref(u2))
+    
+    sys_df = (f2i(k2) - f2i(k1)) + (f2i(u2) - f2i(u1))
+    idl_df = f2i(i2) - f2i(i1)
+    cpu_yuzde = int((sys_df - idl_df) * 100 / sys_df) if sys_df > 0 else 0
+
+    return cpu_yuzde, ram_yuzde
+
+def saf_metal_ekran_goruntusu():
+    yol = os.path.expanduser("~/Desktop/MIKU_SS.png")
+    cmd = f'powershell -command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Screen]::AllScreens | %{{ $b = New-Object System.Drawing.Bitmap $_.Bounds.Width, $_.Bounds.Height; $g = [System.Drawing.Graphics]::FromImage($b); $g.CopyFromScreen($_.Bounds.X, $_.Bounds.Y, 0, 0, $b.Size); $b.Save(\'{yol}\') }}"'
+    subprocess.Popen(cmd, shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
+
+# ★ YENİ: KÜTÜPHANESİZ SAF WİNDOWS SES MOTORU (.NET SAPI5)
+def saf_metal_konus(metin):
+    temiz_metin = re.sub(r'[^\w\s.,?!öçşığüÖÇŞİĞÜ]', '', metin).strip()
+    if not temiz_metin: return
+    # PowerShell üzerinden arka planda sessizce konuşma objesi yaratıp okutuyoruz!
+    cmd = f'powershell -command "Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; $s.Speak(\'{temiz_metin}\')"'
+    subprocess.Popen(cmd, shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
+
+
+# =====================================================================
+# 4. ANA BİLİNÇ VE STANDART MODÜLLER
 # =====================================================================
 import datetime
 import difflib
@@ -64,23 +94,19 @@ import json
 import platform
 import re
 import threading
-import time
 import urllib.parse
 import urllib.request
 import webbrowser
 import customtkinter as ctk
-import pyttsx3
 import speech_recognition as sr
 import winsound
-import psutil
-from PIL import ImageGrab
 
 if sys.stdin is None: sys.stdin = open(os.devnull, "r")
 if sys.stdout is None: sys.stdout = open(os.devnull, "w")
 if sys.stderr is None: sys.stderr = open(os.devnull, "w")
 
 UYANDIRMA_KELIMELERI = ["hey miku", "heymiku", "miku", "uyan"]
-YEREL_SURUM = "v7.1"
+YEREL_SURUM = "v7.5"
 GITHUB_REPO = "Efe-Elite-Dev/SENIN-REPO-ADIN" # <--- Kendi reponu yaz!
 
 
@@ -119,17 +145,17 @@ class SovereignBrain:
     def __init__(self, hafiza_ref):
         self.hafiza = hafiza_ref
         self.yerel_intents = {
-            "MUZIK": ["çal", "şarkı", "müzik", "dinle", "oynat", "parça"],
+            "MUZIK": ["çal", "şarkı", "müzik", "dinle", "oynat", "parça", "müzka", "çla"],
             "MEDYA_DURDUR": ["durdur", "dur", "sus", "kes", "sessiz"],
-            "ALARM": ["alarm", "zil", "uyandır", "hatırlat"],
-            "KILITLE": ["kilitle", "masadan kalkıyorum", "kitle"],
-            "SS_AL": ["ekran görüntüsü", "ss al", "fotoğrafını çek"],
+            "ALARM": ["alarm", "zil", "uyandır", "hatırlat", "alram"],
+            "KILITLE": ["kilitle", "kitle", "masadan"],
+            "SS_AL": ["ekran görüntüsü", "ss al", "fotoğrafını çek", "foto"],
             "ZORLA_KAPAT": ["zorla kapat", "görevini sonlandır", "kill"],
             "HESAP": ["hesap", "makine", "topla", "çıkar", "çarp", "böl"],
             "UYGULAMA": ["çalıştır", "program", "uygulama", "notepad", "cmd"],
             "DIVA": ["diva", "project", "arcade"],
             "TEMIZLE": ["temizle", "sil", "ekran", "clear", "cls"],
-            "DURUM": ["durum", "rapor", "telemetri", "sistem", "bilgi", "işlemci", "ram"],
+            "DURUM": ["durum", "rapor", "telemetri", "sistem", "bilgi", "işlemci"],
             "KAPAT": ["bilgisayarı kapat", "kapan", "söndür", "uykuya", "fişi"],
             "PANIK": ["panik", "gizle", "tehlike"]
         }
@@ -145,18 +171,18 @@ class SovereignBrain:
 
     def niyet_analiz(self, metin):
         mt = metin.lower()
-        if any(k in mt for k in ["kapat", "söndür", "fişi"]) and not any(x in mt for x in ["chrome", "discord", "uygulama", "sekme", "zorla"]): return "KAPAT", mt
-        if any(a in mt for a in ["alarm", "uyandır"]): return "ALARM", mt
+        if any(k in mt for k in ["kapat", "söndür", "fişi"]) and not any(x in mt for x in ["chrome", "discord", "uygulama", "zorla"]): return "KAPAT", mt
+        if any(a in mt for a in ["alarm", "uyandır", "alram"]): return "ALARM", mt
 
         temiz = re.findall(r"\w+", mt)
         skorlar = {}
         for niyet, havuz in self.yerel_intents.items():
-            s = sum(1 for k in temiz if k not in self.cop and (difflib.get_close_matches(k, havuz, n=1, cutoff=0.7) or any(k.startswith(h) for h in havuz)))
+            s = sum(1 for k in temiz if k not in self.cop and (difflib.get_close_matches(k, havuz, n=1, cutoff=0.60) or any(k.startswith(h) for h in havuz)))
             if s > 0: skorlar[niyet] = s
 
         if not skorlar: return "BULUT", metin
         secilen = max(skorlar, key=skorlar.get)
-        hedef_kalan = [k for k in temiz if not difflib.get_close_matches(k, self.yerel_intents[secilen], n=1, cutoff=0.7) and k not in self.cop]
+        hedef_kalan = [k for k in temiz if not difflib.get_close_matches(k, self.yerel_intents[secilen], n=1, cutoff=0.60) and k not in self.cop]
         return secilen, " ".join(hedef_kalan)
 
     def zaman_coz(self, metin):
@@ -183,7 +209,7 @@ class SovereignBrain:
 
 class AlarmSirenPenceresi(ctk.CTkToplevel):
     def __init__(self, etiket):
-        super().__init__(); self.title("🚨 ALARM!"); self.geometry("450x250"); self.configure(fg_color="#450a0a"); self.attributes("-topmost", True); self.aktif = True
+        super().__init__(); self.title("🚨 ALARM!"); self.geometry("450x250"); self.configure(fg_color="#310a0a"); self.attributes("-topmost", True); self.aktif = True
         ctk.CTkLabel(self, text="⏰ M.I.K.U. ALARM DEVREDE", font=("Consolas", 24, "bold"), text_color="#f87171").pack(pady=30)
         ctk.CTkLabel(self, text=f"Hatırlatma: {etiket}", font=("Consolas", 14), text_color="white").pack(pady=10)
         ctk.CTkButton(self, text="SİRENİ SUSTUR", fg_color="white", text_color="black", font=("Consolas", 16, "bold"), height=50, command=self.kapat).pack(pady=20, padx=40, fill="x")
@@ -198,10 +224,8 @@ class MikuArayuz(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.hafiza = SynapseMemory(); self.beyin = SovereignBrain(self.hafiza); self.islemci_adi = gercek_silikon_kimligi()
-        self.geometry("600x750"); self.configure(fg_color="#030712")
+        self.geometry("600x750"); self.configure(fg_color="#050508") 
         ctk.set_appearance_mode("dark")
-        try: self.tts = pyttsx3.init(); self.tts.setProperty("rate", 185)
-        except Exception: self.tts = None
 
         if not self.hafiza.veri.get("kurulum_tamamlandi", False): self.kurulum_ac()
         else: self.karargah_kur()
@@ -210,8 +234,8 @@ class MikuArayuz(ctk.CTk):
         self.title("M.I.K.U. // İLK KURULUM")
         f = ctk.CTkFrame(self, fg_color="transparent"); f.pack(fill="both", expand=True, padx=40, pady=60)
         ctk.CTkLabel(f, text="⚡ SİBER KİMLİK MÜHÜRÜ", font=("Consolas", 22, "bold"), text_color="#00E5FF").pack(pady=20)
-        self.ent_i = ctk.CTkEntry(f, placeholder_text="Patron Adı (Örn: Efe)", height=42); self.ent_i.pack(fill="x", pady=10)
-        self.ent_w = ctk.CTkEntry(f, placeholder_text="Uyandırma Kelimesi (Örn: uyan)", height=42); self.ent_w.pack(fill="x", pady=10)
+        self.ent_i = ctk.CTkEntry(f, placeholder_text="Patron Adı (Örn: Efe)", height=42, fg_color="#0f172a"); self.ent_i.pack(fill="x", pady=10)
+        self.ent_w = ctk.CTkEntry(f, placeholder_text="Uyandırma Kelimesi (Örn: uyan)", height=42, fg_color="#0f172a"); self.ent_w.pack(fill="x", pady=10)
         ctk.CTkButton(f, text="SİSTEMİ BAŞLAT 🚀", fg_color="#00E5FF", text_color="black", font=("Consolas", 14, "bold"), height=48, command=lambda: self.k_kaydet(f)).pack(pady=40, fill="x")
 
     def k_kaydet(self, f):
@@ -219,23 +243,23 @@ class MikuArayuz(ctk.CTk):
         self.hafiza.veri["kurulum_tamamlandi"] = True; self.hafiza.kaydet(); f.destroy(); self.karargah_kur()
 
     def karargah_kur(self):
-        self.title(f"M.I.K.U. Sovereign v7.1 // [{self.hafiza.veri['patron']}]")
-        self.top_frame = ctk.CTkFrame(self, fg_color="#0f172a", corner_radius=8, border_color="#00E5FF", border_width=1)
+        self.title(f"M.I.K.U. Sovereign v7.5 // [{self.hafiza.veri['patron']}]")
+        self.top_frame = ctk.CTkFrame(self, fg_color="#0a0f1d", corner_radius=8, border_color="#00E5FF", border_width=1)
         self.top_frame.pack(pady=(12, 5), padx=15, fill="x")
         self.lbl_cpu = ctk.CTkLabel(self.top_frame, text=f"💻 {self.islemci_adi}", font=("Consolas", 11, "bold"), text_color="#38bdf8")
         self.lbl_cpu.pack(pady=(6,2), padx=10, anchor="w")
         self.lbl_stats = ctk.CTkLabel(self.top_frame, text="⚡ Telemetri Yükleniyor...", font=("Consolas", 11), text_color="#94a3b8")
         self.lbl_stats.pack(pady=(0,6), padx=10, anchor="w")
 
-        self.ses_bar = ctk.CTkProgressBar(self, mode="indeterminate", fg_color="#030712", progress_color="#00E5FF", height=3)
+        self.ses_bar = ctk.CTkProgressBar(self, mode="indeterminate", fg_color="#050508", progress_color="#00E5FF", height=3)
         self.ses_bar.pack(pady=2, padx=15, fill="x"); self.ses_bar.set(0)
 
-        self.chat = ctk.CTkTextbox(self, fg_color="#080c14", text_color="#00E5FF", font=("Consolas", 13), border_color="#1e293b", border_width=1, corner_radius=10)
+        self.chat = ctk.CTkTextbox(self, fg_color="#020307", text_color="#00E5FF", font=("Consolas", 13), border_color="#1e293b", border_width=1, corner_radius=10)
         self.chat.pack(pady=5, padx=15, fill="both", expand=True)
-        self.log(f"=== M.I.K.U. KERNEL v7.1 AKTİF ===\nSilikon: {self.islemci_adi}\nŞifre: '{self.hafiza.veri['uyandirma_kelimesi']}'\nÖzellik: Zero-Touch Bağımlılık Nakli Entegre edildi.\n--------------------------------------------------\n")
+        self.log(f"=== M.I.K.U. KERNEL v7.5 DEVREDE ===\nSilikon: {self.islemci_adi}\nFelsefe: [Bare Metal] pyttsx3 kütüphanesi çöpe atıldı!\nDonanım: Ses, SS, CPU ve RAM artık %100 saf metal.\n--------------------------------------------------\n")
 
         inp = ctk.CTkFrame(self, fg_color="transparent"); inp.pack(pady=(5, 12), padx=15, fill="x")
-        self.ent = ctk.CTkEntry(inp, placeholder_text="Miku Emir Satırı...", fg_color="#0f172a", text_color="white", font=("Consolas", 13), height=42)
+        self.ent = ctk.CTkEntry(inp, placeholder_text="Miku Emir Satırı...", fg_color="#0a0f1d", text_color="white", font=("Consolas", 13), height=42, border_color="#1e293b")
         self.ent.pack(side="left", fill="x", expand=True, padx=(0, 10)); self.ent.bind("<Return>", lambda e: self.tetik())
         ctk.CTkButton(inp, text="VUR", width=80, height=42, fg_color="#00E5FF", hover_color="#00b8d4", text_color="black", font=("Consolas", 13, "bold"), command=self.tetik).pack(side="right")
 
@@ -262,8 +286,9 @@ class MikuArayuz(ctk.CTk):
 
     def donanim_dongusu(self):
         while True:
-            if psutil: self.lbl_stats.configure(text=f"🔥 CPU Yükü: %{psutil.cpu_percent(interval=1)} | 💾 RAM: %{psutil.virtual_memory().percent} | 👑 Emir: {self.hafiza.veri['toplam_komut']}")
-            time.sleep(1)
+            cpu, ram = saf_metal_telemetri()
+            self.lbl_stats.configure(text=f"🔥 CPU Yükü: %{cpu} | 💾 RAM: %{ram} | 👑 Emir: {self.hafiza.veri['toplam_komut']}")
+            time.sleep(1.2)
 
     def alarm_bekcisi(self):
         while True:
@@ -274,10 +299,10 @@ class MikuArayuz(ctk.CTk):
             self.hafiza.veri["alarmlar"] = kl; time.sleep(20)
 
     def log(self, m): self.chat.configure(state="normal"); self.chat.insert("end", m); self.chat.configure(state="disabled"); self.chat.see("end")
+    
     def ses(self, m):
-        if self.tts and (t := re.sub(r"[^\w\s.,?!]", "", m).strip()):
-            try: self.tts.say(t[:140]); self.tts.runAndWait()
-            except Exception: pass
+        # ★★★ ESKİ PYTTSX3 ÇÖPE ATILDI, SAF METAL ÇAĞRILIYOR ★★★
+        threading.Thread(target=saf_metal_konus, args=(m,), daemon=True).start()
 
     def diril(self):
         try: self.deiconify(); self.lift(); self.focus_force()
@@ -294,9 +319,7 @@ class MikuArayuz(ctk.CTk):
         elif niyet == "KAPAT":
             if "iptal" in komut: os.system("shutdown /a"); y = "🔴 Kapatma iptal!"
             else: sn, st = self.beyin.zaman_coz(komut); os.system(f"shutdown /s /t {sn}"); y = f"⚠️ Bilgisayar saat {st}'da kapanacak."
-        elif niyet == "SS_AL":
-            if ImageGrab: ImageGrab.grab().save(os.path.expanduser("~/Desktop/MIKU_SS.png")); y = "📸 Ekran fotoğrafı Masaüstüne 'MIKU_SS.png' olarak bırakıldı."
-            else: y = "PIL eksik."
+        elif niyet == "SS_AL": saf_metal_ekran_goruntusu(); y = "📸 [Saf Metal Kanca]: Ekran pikselleri yakalandı, Masaüstüne 'MIKU_SS.png' olarak bırakıldı."
         elif niyet == "KILITLE": ctypes.windll.user32.LockWorkStation(); y = "Sistem kilitlendi."
         elif niyet == "ZORLA_KAPAT": os.system(f"taskkill /f /im {hedef or 'chrome'}.exe"); y = f"'{hedef}.exe' zorla infaz edildi."
         elif niyet == "MEDYA_DURDUR": ctypes.windll.user32.keybd_event(0xB3, 0, 0, 0); ctypes.windll.user32.keybd_event(0xB3, 0, 2, 0); y = "Medya durduruldu."
